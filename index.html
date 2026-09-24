@@ -1,1 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Larry</title>
+
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: white;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: Arial, sans-serif;
+
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  #larry {
+    font-size: clamp(42px, 8vw, 64px);
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    /* Spin around Larry's center */
+    transform-origin: center center;
+  }
+
+  .spin {
+    animation: spin 0.5s ease;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  #made {
+    position: fixed;
+    right: 8px;
+    bottom: 6px;
+
+    font-size: 8px;
+    color: #aaa;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="larry">Larry</div>
+
+<div id="made">Made by LWE</div>
+
+<script>
+const larry = document.getElementById("larry");
+
+larry.addEventListener("click", () => {
+
+  // Restart the spin every time Larry is clicked
+  larry.classList.remove("spin");
+
+  // Force the browser to restart the animation
+  void larry.offsetWidth;
+
+  larry.classList.add("spin");
+});
+</script>
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,12 @@
 <title>Larry</title>
 
 <style>
-  html, body {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
     margin: 0;
     width: 100%;
     height: 100%;
@@ -16,72 +22,681 @@
   }
 
   body {
+    font-family: Arial, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  #scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
 
-    font-family: Arial, sans-serif;
+  /* BIGGER LARRY */
+
+  #larry {
+    position: relative;
+
+    color: #222;
+
+    /*
+      Larger overall size
+    */
+    font-size: clamp(70px, 14vw, 110px);
+
+    font-weight: 400;
+
+    /*
+      Makes "Larry" wider
+    */
+    letter-spacing: 2px;
+
+    /*
+      Slightly wider character spacing
+    */
+    transform-origin: center center;
+
+    cursor: grab;
+
+    will-change: transform;
+
+    touch-action: none;
 
     user-select: none;
     -webkit-user-select: none;
-    touch-action: manipulation;
+
+    -webkit-font-smoothing: antialiased;
+
+    /*
+      Gives the text a little more
+      physical presence.
+    */
+    padding: 18px 35px;
   }
 
-  #larry {
-    font-size: clamp(42px, 8vw, 64px);
-    cursor: pointer;
-
-    -webkit-tap-highlight-color: transparent;
-
-    /* Spin around Larry's center */
-    transform-origin: center center;
+  #larry:active {
+    cursor: grabbing;
   }
 
-  .spin {
-    animation: spin 0.5s ease;
+
+  /* ONE-TIME HINT */
+
+  #hint {
+    position: absolute;
+
+    top: calc(50% + 110px);
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    font-size: 11px;
+
+    color: #8d8d8d;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+      opacity 1.4s ease;
   }
 
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
+  #hint.show {
+    opacity: 1;
+  }
+
+
+  /* SPEED EFFECTS */
+
+  #effects {
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+
+    width: 3px;
+    height: 3px;
+
+    border-radius: 50%;
+
+    background: #555;
+
+    opacity: 0;
+
+    animation:
+      particle 0.8s
+      cubic-bezier(0.16, 1, 0.3, 1)
+      forwards;
+  }
+
+  @keyframes particle {
+
+    0% {
+      opacity: 0.35;
+
+      transform:
+        translate(0, 0)
+        scale(1);
     }
 
-    to {
-      transform: rotate(360deg);
+    100% {
+      opacity: 0;
+
+      transform:
+        translate(var(--x), var(--y))
+        scale(0);
     }
+
   }
+
+
+  /* FAST-SPIN FLASH */
+
+  #flash {
+    position: absolute;
+    inset: 0;
+
+    background: white;
+
+    pointer-events: none;
+
+    opacity: 0;
+  }
+
+  #flash.active {
+    animation:
+      flash 0.3s ease-out;
+  }
+
+  @keyframes flash {
+
+    0% {
+      opacity: 0;
+    }
+
+    25% {
+      opacity: 0.18;
+    }
+
+    100% {
+      opacity: 0;
+    }
+
+  }
+
+
+  /* CREDIT */
 
   #made {
     position: fixed;
+
     right: 8px;
     bottom: 6px;
 
     font-size: 8px;
+
     color: #aaa;
   }
+
 </style>
 </head>
 
+
 <body>
 
-<div id="larry">Larry</div>
+<div id="scene">
 
-<div id="made">Made by LwOrks</div>
+  <div id="effects"></div>
+
+  <div id="larry">
+    Larry
+  </div>
+
+  <div id="hint">
+    Hint: Drag the text to spin
+  </div>
+
+  <div id="flash"></div>
+
+</div>
+
+<div id="made">
+  Made by LwOrks
+</div>
+
 
 <script>
-const larry = document.getElementById("larry");
 
-larry.addEventListener("click", () => {
+const larry =
+  document.getElementById("larry");
 
-  // Restart the spin every time Larry is clicked
-  larry.classList.remove("spin");
+const hint =
+  document.getElementById("hint");
 
-  // Force the browser to restart the animation
-  void larry.offsetWidth;
+const effects =
+  document.getElementById("effects");
 
-  larry.classList.add("spin");
-});
+const flash =
+  document.getElementById("flash");
+
+
+let angle = 0;
+
+let velocity = 0;
+
+let dragging = false;
+
+let lastPointerAngle = 0;
+
+let lastTime = 0;
+
+let lastInteraction =
+  performance.now();
+
+
+/*
+  Hint can only appear once.
+*/
+
+let hintShown = false;
+
+
+let lastEffectTime = 0;
+
+let lastFastFlash = 0;
+
+
+/*
+  Reset interaction timer.
+*/
+
+function resetHintTimer() {
+
+  lastInteraction =
+    performance.now();
+
+  hint.classList.remove("show");
+
+}
+
+
+/*
+  Get pointer angle from
+  Larry's center.
+*/
+
+function getPointerAngle(event) {
+
+  const rect =
+    larry.getBoundingClientRect();
+
+  const centerX =
+    rect.left +
+    rect.width / 2;
+
+  const centerY =
+    rect.top +
+    rect.height / 2;
+
+  return Math.atan2(
+    event.clientY - centerY,
+    event.clientX - centerX
+  );
+
+}
+
+
+/*
+  Prevent rotation jumps
+  when crossing 180 degrees.
+*/
+
+function angleDifference(a, b) {
+
+  let difference =
+    a - b;
+
+  while (
+    difference > Math.PI
+  ) {
+
+    difference -=
+      Math.PI * 2;
+
+  }
+
+  while (
+    difference < -Math.PI
+  ) {
+
+    difference +=
+      Math.PI * 2;
+
+  }
+
+  return difference;
+
+}
+
+
+/*
+  Render Larry.
+*/
+
+function render() {
+
+  larry.style.transform =
+    `rotate(${angle}rad)`;
+
+}
+
+
+/*
+  Start dragging.
+*/
+
+larry.addEventListener(
+  "pointerdown",
+  (event) => {
+
+    dragging = true;
+
+    resetHintTimer();
+
+    larry.setPointerCapture(
+      event.pointerId
+    );
+
+    lastPointerAngle =
+      getPointerAngle(event);
+
+    lastTime =
+      performance.now();
+
+    velocity *= 0.45;
+
+  }
+);
+
+
+/*
+  Drag Larry.
+*/
+
+larry.addEventListener(
+  "pointermove",
+  (event) => {
+
+    if (!dragging) return;
+
+    resetHintTimer();
+
+    const now =
+      performance.now();
+
+    const pointerAngle =
+      getPointerAngle(event);
+
+    const difference =
+      angleDifference(
+        pointerAngle,
+        lastPointerAngle
+      );
+
+    const deltaTime =
+      Math.max(
+        now - lastTime,
+        1
+      );
+
+
+    /*
+      Follow the pointer.
+    */
+
+    angle += difference;
+
+
+    /*
+      Calculate momentum.
+    */
+
+    const measuredVelocity =
+      difference /
+      deltaTime *
+      16;
+
+
+    /*
+      Smooth acceleration.
+    */
+
+    velocity =
+      velocity * 0.78 +
+      measuredVelocity * 0.22;
+
+
+    /*
+      Maximum spin speed.
+    */
+
+    velocity =
+      Math.max(
+        -0.58,
+        Math.min(
+          0.58,
+          velocity
+        )
+      );
+
+
+    lastPointerAngle =
+      pointerAngle;
+
+    lastTime =
+      now;
+
+
+    render();
+
+    checkSpeed();
+
+  }
+);
+
+
+/*
+  Release Larry.
+*/
+
+function release() {
+
+  if (!dragging) return;
+
+  dragging = false;
+
+  resetHintTimer();
+
+}
+
+
+larry.addEventListener(
+  "pointerup",
+  release
+);
+
+larry.addEventListener(
+  "pointercancel",
+  release
+);
+
+
+/*
+  Physics loop.
+*/
+
+function physics() {
+
+  if (!dragging) {
+
+    angle += velocity;
+
+
+    /*
+      Smooth friction.
+    */
+
+    velocity *= 0.988;
+
+
+    /*
+      Stop extremely tiny movement.
+    */
+
+    if (
+      Math.abs(velocity) <
+      0.00008
+    ) {
+
+      velocity = 0;
+
+    }
+
+
+    render();
+
+    checkSpeed();
+
+  }
+
+
+  /*
+    Show hint once after 2 seconds.
+  */
+
+  if (
+    !dragging &&
+    !hintShown &&
+    performance.now() -
+      lastInteraction >= 2000
+  ) {
+
+    hint.classList.add("show");
+
+    hintShown = true;
+
+  }
+
+
+  requestAnimationFrame(
+    physics
+  );
+
+}
+
+
+/*
+  Speed effects.
+*/
+
+function checkSpeed() {
+
+  const speed =
+    Math.abs(velocity);
+
+
+  /*
+    Particles.
+  */
+
+  if (
+    speed > 0.14 &&
+    performance.now() -
+      lastEffectTime > 100
+  ) {
+
+    createParticle();
+
+    lastEffectTime =
+      performance.now();
+
+  }
+
+
+  /*
+    Very fast spin flash.
+  */
+
+  if (
+    speed > 0.34 &&
+    performance.now() -
+      lastFastFlash > 1000
+  ) {
+
+    flash.classList.remove(
+      "active"
+    );
+
+    void flash.offsetWidth;
+
+    flash.classList.add(
+      "active"
+    );
+
+    lastFastFlash =
+      performance.now();
+
+  }
+
+}
+
+
+/*
+  Create particle.
+*/
+
+function createParticle() {
+
+  const particle =
+    document.createElement("div");
+
+  particle.className =
+    "particle";
+
+
+  const rect =
+    larry.getBoundingClientRect();
+
+
+  const centerX =
+    rect.left +
+    rect.width / 2;
+
+  const centerY =
+    rect.top +
+    rect.height / 2;
+
+
+  particle.style.left =
+    centerX + "px";
+
+  particle.style.top =
+    centerY + "px";
+
+
+  const distance =
+    25 +
+    Math.random() * 55;
+
+
+  const randomAngle =
+    Math.random() *
+    Math.PI * 2;
+
+
+  particle.style.setProperty(
+    "--x",
+    `${Math.cos(randomAngle) * distance}px`
+  );
+
+
+  particle.style.setProperty(
+    "--y",
+    `${Math.sin(randomAngle) * distance}px`
+  );
+
+
+  effects.appendChild(
+    particle
+  );
+
+
+  setTimeout(
+    () => particle.remove(),
+    850
+  );
+
+}
+
+
+/*
+  Start physics.
+*/
+
+physics();
+
 </script>
 
 </body>
 </html>
+```

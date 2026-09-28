@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,45 +37,19 @@
     justify-content: center;
   }
 
-  /* BIGGER LARRY */
-
   #larry {
     position: relative;
-
     color: #222;
-
-    /*
-      Larger overall size
-    */
     font-size: clamp(70px, 14vw, 110px);
-
     font-weight: 400;
-
-    /*
-      Makes "Larry" wider
-    */
     letter-spacing: 2px;
-
-    /*
-      Slightly wider character spacing
-    */
     transform-origin: center center;
-
     cursor: grab;
-
     will-change: transform;
-
     touch-action: none;
-
     user-select: none;
     -webkit-user-select: none;
-
     -webkit-font-smoothing: antialiased;
-
-    /*
-      Gives the text a little more
-      physical presence.
-    */
     padding: 18px 35px;
   }
 
@@ -82,56 +57,36 @@
     cursor: grabbing;
   }
 
-
-  /* ONE-TIME HINT */
-
   #hint {
     position: absolute;
-
     top: calc(50% + 110px);
     left: 50%;
-
     transform: translateX(-50%);
-
     font-size: 11px;
-
     color: #8d8d8d;
-
     opacity: 0;
-
     pointer-events: none;
-
-    transition:
-      opacity 1.4s ease;
+    transition: opacity 1.4s ease;
   }
 
   #hint.show {
     opacity: 1;
   }
 
-
-  /* SPEED EFFECTS */
-
   #effects {
     position: absolute;
     inset: 0;
-
     pointer-events: none;
     overflow: hidden;
   }
 
   .particle {
     position: absolute;
-
     width: 3px;
     height: 3px;
-
     border-radius: 50%;
-
     background: #555;
-
     opacity: 0;
-
     animation:
       particle 0.8s
       cubic-bezier(0.16, 1, 0.3, 1)
@@ -139,46 +94,30 @@
   }
 
   @keyframes particle {
-
     0% {
       opacity: 0.35;
-
-      transform:
-        translate(0, 0)
-        scale(1);
+      transform: translate(0, 0) scale(1);
     }
 
     100% {
       opacity: 0;
-
-      transform:
-        translate(var(--x), var(--y))
-        scale(0);
+      transform: translate(var(--x), var(--y)) scale(0);
     }
-
   }
-
-
-  /* FAST-SPIN FLASH */
 
   #flash {
     position: absolute;
     inset: 0;
-
     background: white;
-
     pointer-events: none;
-
     opacity: 0;
   }
 
   #flash.active {
-    animation:
-      flash 0.3s ease-out;
+    animation: flash 0.3s ease-out;
   }
 
   @keyframes flash {
-
     0% {
       opacity: 0;
     }
@@ -190,26 +129,17 @@
     100% {
       opacity: 0;
     }
-
   }
-
-
-  /* CREDIT */
 
   #made {
     position: fixed;
-
     right: 8px;
     bottom: 6px;
-
     font-size: 8px;
-
     color: #aaa;
   }
-
 </style>
 </head>
-
 
 <body>
 
@@ -233,8 +163,102 @@
   Made by LwOrks
 </div>
 
-
 <script>
+
+/* =========================================================
+   INVISIBLE VISITOR TRACKING
+   ========================================================= */
+
+let visitorId =
+  sessionStorage.getItem("larryVisitorId");
+
+if (!visitorId) {
+  visitorId =
+    crypto.randomUUID();
+
+  sessionStorage.setItem(
+    "larryVisitorId",
+    visitorId
+  );
+}
+
+
+/*
+  Tell the server this visitor is online.
+*/
+
+async function heartbeat() {
+
+  try {
+
+    await fetch(
+      "/api/heartbeat",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+
+        body: JSON.stringify({
+          id: visitorId
+        }),
+
+        keepalive: true
+      }
+    );
+
+  } catch (error) {
+    /*
+      Tracking failure does NOT
+      affect the website.
+    */
+  }
+
+}
+
+
+/*
+  First connection.
+*/
+
+heartbeat();
+
+
+/*
+  Keep the visitor marked online.
+*/
+
+setInterval(
+  heartbeat,
+  10000
+);
+
+
+/*
+  Tell the server when the
+  browser is being closed.
+*/
+
+window.addEventListener(
+  "pagehide",
+  () => {
+
+    navigator.sendBeacon(
+      "/api/leave",
+
+      JSON.stringify({
+        id: visitorId
+      })
+    );
+
+  }
+);
+
+
+/* =========================================================
+   ORIGINAL LARRY WEBSITE
+   ========================================================= */
 
 const larry =
   document.getElementById("larry");
@@ -262,22 +286,12 @@ let lastTime = 0;
 let lastInteraction =
   performance.now();
 
-
-/*
-  Hint can only appear once.
-*/
-
 let hintShown = false;
-
 
 let lastEffectTime = 0;
 
 let lastFastFlash = 0;
 
-
-/*
-  Reset interaction timer.
-*/
 
 function resetHintTimer() {
 
@@ -288,11 +302,6 @@ function resetHintTimer() {
 
 }
 
-
-/*
-  Get pointer angle from
-  Larry's center.
-*/
 
 function getPointerAngle(event) {
 
@@ -314,11 +323,6 @@ function getPointerAngle(event) {
 
 }
 
-
-/*
-  Prevent rotation jumps
-  when crossing 180 degrees.
-*/
 
 function angleDifference(a, b) {
 
@@ -348,10 +352,6 @@ function angleDifference(a, b) {
 }
 
 
-/*
-  Render Larry.
-*/
-
 function render() {
 
   larry.style.transform =
@@ -359,10 +359,6 @@ function render() {
 
 }
 
-
-/*
-  Start dragging.
-*/
 
 larry.addEventListener(
   "pointerdown",
@@ -387,10 +383,6 @@ larry.addEventListener(
   }
 );
 
-
-/*
-  Drag Larry.
-*/
 
 larry.addEventListener(
   "pointermove",
@@ -418,36 +410,16 @@ larry.addEventListener(
         1
       );
 
-
-    /*
-      Follow the pointer.
-    */
-
     angle += difference;
-
-
-    /*
-      Calculate momentum.
-    */
 
     const measuredVelocity =
       difference /
       deltaTime *
       16;
 
-
-    /*
-      Smooth acceleration.
-    */
-
     velocity =
       velocity * 0.78 +
       measuredVelocity * 0.22;
-
-
-    /*
-      Maximum spin speed.
-    */
 
     velocity =
       Math.max(
@@ -458,13 +430,11 @@ larry.addEventListener(
         )
       );
 
-
     lastPointerAngle =
       pointerAngle;
 
     lastTime =
       now;
-
 
     render();
 
@@ -473,10 +443,6 @@ larry.addEventListener(
   }
 );
 
-
-/*
-  Release Larry.
-*/
 
 function release() {
 
@@ -500,27 +466,13 @@ larry.addEventListener(
 );
 
 
-/*
-  Physics loop.
-*/
-
 function physics() {
 
   if (!dragging) {
 
     angle += velocity;
 
-
-    /*
-      Smooth friction.
-    */
-
     velocity *= 0.988;
-
-
-    /*
-      Stop extremely tiny movement.
-    */
 
     if (
       Math.abs(velocity) <
@@ -531,17 +483,12 @@ function physics() {
 
     }
 
-
     render();
 
     checkSpeed();
 
   }
 
-
-  /*
-    Show hint once after 2 seconds.
-  */
 
   if (
     !dragging &&
@@ -564,19 +511,10 @@ function physics() {
 }
 
 
-/*
-  Speed effects.
-*/
-
 function checkSpeed() {
 
   const speed =
     Math.abs(velocity);
-
-
-  /*
-    Particles.
-  */
 
   if (
     speed > 0.14 &&
@@ -591,10 +529,6 @@ function checkSpeed() {
 
   }
 
-
-  /*
-    Very fast spin flash.
-  */
 
   if (
     speed > 0.34 &&
@@ -620,10 +554,6 @@ function checkSpeed() {
 }
 
 
-/*
-  Create particle.
-*/
-
 function createParticle() {
 
   const particle =
@@ -632,10 +562,8 @@ function createParticle() {
   particle.className =
     "particle";
 
-
   const rect =
     larry.getBoundingClientRect();
-
 
   const centerX =
     rect.left +
@@ -645,40 +573,33 @@ function createParticle() {
     rect.top +
     rect.height / 2;
 
-
   particle.style.left =
     centerX + "px";
 
   particle.style.top =
     centerY + "px";
 
-
   const distance =
     25 +
     Math.random() * 55;
 
-
   const randomAngle =
     Math.random() *
     Math.PI * 2;
-
 
   particle.style.setProperty(
     "--x",
     `${Math.cos(randomAngle) * distance}px`
   );
 
-
   particle.style.setProperty(
     "--y",
     `${Math.sin(randomAngle) * distance}px`
   );
 
-
   effects.appendChild(
     particle
   );
-
 
   setTimeout(
     () => particle.remove(),
@@ -688,13 +609,10 @@ function createParticle() {
 }
 
 
-/*
-  Start physics.
-*/
-
 physics();
 
 </script>
 
 </body>
 </html>
+```

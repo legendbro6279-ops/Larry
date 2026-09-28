@@ -1,303 +1,802 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Larry</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-  * {
-    box-sizing: border-box;
-  }
+* {
+  box-sizing: border-box;
+}
 
-  html,
-  body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: white;
-  }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: white;
+  font-family: Arial, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
 
-  body {
-    font-family: Arial, sans-serif;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-  }
+#scene {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  #scene {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+#larry {
+  color: #222;
+  font-size: clamp(70px, 14vw, 110px);
+  letter-spacing: 2px;
+  padding: 20px 35px;
+  cursor: grab;
+  transform-origin: center;
+  will-change: transform;
+}
 
-  #larry {
-    position: relative;
-    color: #222;
-    font-size: clamp(70px, 14vw, 110px);
-    font-weight: 400;
-    letter-spacing: 2px;
-    transform-origin: center center;
-    cursor: grab;
-    will-change: transform;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-font-smoothing: antialiased;
-    padding: 18px 35px;
-  }
+#larry:active {
+  cursor: grabbing;
+}
 
-  #larry:active {
-    cursor: grabbing;
-  }
+#made {
+  position: fixed;
+  right: 8px;
+  bottom: 6px;
+  font-size: 8px;
+  color: #aaa;
+}
 
-  #hint {
-    position: absolute;
-    top: calc(50% + 110px);
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 11px;
-    color: #8d8d8d;
+#effects {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #555;
+  animation: particle .8s ease-out forwards;
+}
+
+@keyframes particle {
+  from {
+    opacity: .4;
+    transform: translate(0,0) scale(1);
+  }
+  to {
     opacity: 0;
-    pointer-events: none;
-    transition: opacity 1.4s ease;
+    transform: translate(var(--x),var(--y)) scale(0);
   }
+}
 
-  #hint.show {
-    opacity: 1;
-  }
+#flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
 
-  #effects {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
+#flash.active {
+  animation: flash .3s ease-out;
+}
 
-  .particle {
-    position: absolute;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: #555;
-    opacity: 0;
+@keyframes flash {
+  0% { opacity: 0; }
+  25% { opacity: .2; }
+  100% { opacity: 0; }
+}
 
-    animation:
-      particle 0.8s
-      cubic-bezier(0.16, 1, 0.3, 1)
-      forwards;
-  }
+/* PANEL */
 
-  @keyframes particle {
+#panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(380px, 90vw);
+  height: 100vh;
+  background: rgba(255,255,255,.98);
+  box-shadow: -10px 0 35px rgba(0,0,0,.15);
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.16,1,.3,1);
+  z-index: 1000;
+  padding: 25px;
+  overflow-y: auto;
+  touch-action: auto;
+}
 
-    0% {
-      opacity: 0.35;
-      transform:
-        translate(0, 0)
-        scale(1);
-    }
+#panel.open {
+  transform: translateX(0);
+}
 
-    100% {
-      opacity: 0;
-      transform:
-        translate(var(--x), var(--y))
-        scale(0);
-    }
+#panelTitle {
+  font-size: 22px;
+  margin-bottom: 25px;
+}
 
-  }
+#close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #eee;
+  font-size: 20px;
+  cursor: pointer;
+}
 
-  #flash {
-    position: absolute;
-    inset: 0;
-    background: white;
-    pointer-events: none;
-    opacity: 0;
-  }
+.stat {
+  background: #f5f5f5;
+  border-radius: 15px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
 
-  #flash.active {
-    animation:
-      flash 0.3s ease-out;
-  }
+.statLabel {
+  color: #999;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
 
-  @keyframes flash {
+.statNumber {
+  font-size: 40px;
+  margin-top: 5px;
+}
 
-    0% {
-      opacity: 0;
-    }
+#connection {
+  font-size: 11px;
+  color: #888;
+  margin: 15px 0 25px;
+}
 
-    25% {
-      opacity: 0.18;
-    }
+#notification {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: Arial,sans-serif;
+  font-size: 14px;
+  outline: none;
+}
 
-    100% {
-      opacity: 0;
-    }
+#notification:focus {
+  border-color: #999;
+}
 
-  }
+#send {
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: #222;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
 
-  #made {
-    position: fixed;
-    right: 8px;
-    bottom: 6px;
-    font-size: 8px;
-    color: #aaa;
-  }
+#send:active {
+  transform: scale(.98);
+}
 
+/* LIVE MESSAGE */
+
+#liveMessage {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  width: min(500px, 90vw);
+  padding: 15px 20px;
+  background: #222;
+  color: white;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  transform: translate(-50%, -160%);
+  transition: transform .4s cubic-bezier(.16,1,.3,1);
+  z-index: 2000;
+  pointer-events: none;
+}
+
+#liveMessage.show {
+  transform: translate(-50%, 0);
+}
+
+#hint {
+  position: fixed;
+  top: calc(50% + 105px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #aaa;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 1s;
+  pointer-events: none;
+}
+
+#hint.show {
+  opacity: 1;
+}
 </style>
 </head>
 
 <body>
 
-<!--
-  Invisible visit counter.
-  This does not change the appearance
-  of the website.
--->
-<img
-  src="https://api.counterapi.dev/v1/larry-lworks/visits/up"
-  style="display:none"
-  alt=""
->
-
-
 <div id="scene">
-
   <div id="effects"></div>
-
-  <div id="larry">
-    Larry
-  </div>
-
-  <div id="hint">
-    Hint: Drag the text to spin
-  </div>
-
+  <div id="larry">Larry</div>
+  <div id="hint">Drag the text to spin</div>
   <div id="flash"></div>
+</div>
+
+<div id="made">Made by LwOrks</div>
+
+<!-- CONTROL PANEL -->
+
+<div id="panel">
+
+  <button id="close">×</button>
+
+  <div id="panelTitle">
+    Larry Control
+  </div>
+
+  <div id="connection">
+    Connecting to Larry backend...
+  </div>
+
+  <div class="stat">
+    <div class="statLabel">ACTIVE VISITORS</div>
+    <div class="statNumber" id="active">0</div>
+  </div>
+
+  <div class="stat">
+    <div class="statLabel">TOTAL VISITS</div>
+    <div class="statNumber" id="total">0</div>
+  </div>
+
+  <div class="stat">
+
+    <div class="statLabel">
+      LIVE NOTIFICATION
+    </div>
+
+    <br>
+
+    <textarea
+      id="notification"
+      placeholder="Type something to send to everyone..."
+    ></textarea>
+
+    <button id="send">
+      Send to everyone
+    </button>
+
+  </div>
 
 </div>
 
-
-<div id="made">
-  Made by LwOrks
-</div>
-
+<div id="liveMessage"></div>
 
 <script>
 
-const larry =
-  document.getElementById("larry");
+/* =====================================================
+   SUPABASE CONNECTION
+===================================================== */
 
-const hint =
-  document.getElementById("hint");
+const SUPABASE_URL =
+  "https://himyscnotmzwssjiqrw.supabase.co";
 
-const effects =
-  document.getElementById("effects");
+const SUPABASE_KEY =
+  "sb_publishable_5jJojR2SUEn0sT-devhqTg_u3ThDilM";
 
-const flash =
-  document.getElementById("flash");
-
-
-let angle = 0;
-
-let velocity = 0;
-
-let dragging = false;
-
-let lastPointerAngle = 0;
-
-let lastTime = 0;
-
-let lastInteraction =
-  performance.now();
-
-let hintShown = false;
-
-let lastEffectTime = 0;
-
-let lastFastFlash = 0;
+const supabase =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
 
-/*
-  Reset interaction timer.
-*/
+/* =====================================================
+   VISITOR ID
+===================================================== */
 
-function resetHintTimer() {
+let visitorId =
+  sessionStorage.getItem("larry_visitor_id");
 
-  lastInteraction =
-    performance.now();
+if (!visitorId) {
 
-  hint.classList.remove("show");
+  visitorId =
+    crypto.randomUUID();
+
+  sessionStorage.setItem(
+    "larry_visitor_id",
+    visitorId
+  );
 
 }
 
 
-/*
-  Get pointer angle.
-*/
+/* =====================================================
+   REALTIME CHANNEL
+===================================================== */
+
+const channel =
+  supabase.channel(
+    "larry-live",
+    {
+      config: {
+        presence: {
+          key: visitorId
+        }
+      }
+    }
+  );
+
+
+/* =====================================================
+   ACTIVE VISITORS
+===================================================== */
+
+channel.on(
+  "presence",
+  {
+    event: "sync"
+  },
+  () => {
+
+    const state =
+      channel.presenceState();
+
+    let count = 0;
+
+    for (const key in state) {
+      count += state[key].length;
+    }
+
+    document.getElementById(
+      "active"
+    ).textContent = count;
+
+  }
+);
+
+
+/* =====================================================
+   LIVE NOTIFICATIONS
+===================================================== */
+
+channel.on(
+  "broadcast",
+  {
+    event: "notification"
+  },
+  payload => {
+
+    const message =
+      payload.payload?.message;
+
+    if (!message) return;
+
+    showLiveMessage(message);
+
+  }
+);
+
+
+/* =====================================================
+   CONNECT
+===================================================== */
+
+channel.subscribe(
+  async status => {
+
+    const connection =
+      document.getElementById(
+        "connection"
+      );
+
+    if (status === "SUBSCRIBED") {
+
+      connection.textContent =
+        "● Backend connected";
+
+      connection.style.color =
+        "#28a745";
+
+      await channel.track({
+        online: true,
+        joined:
+          new Date().toISOString()
+      });
+
+    }
+
+    else {
+
+      connection.textContent =
+        "Backend: " + status;
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   TOTAL VISITS
+===================================================== */
+
+async function recordVisit() {
+
+  const { error } =
+    await supabase
+      .from("site_visits")
+      .insert({});
+
+  if (!error) {
+    loadTotalVisits();
+  }
+
+}
+
+async function loadTotalVisits() {
+
+  const { count, error } =
+    await supabase
+      .from("site_visits")
+      .select(
+        "*",
+        {
+          count: "exact",
+          head: true
+        }
+      );
+
+  if (!error) {
+
+    document.getElementById(
+      "total"
+    ).textContent = count ?? 0;
+
+  }
+
+}
+
+recordVisit();
+
+
+/* =====================================================
+   LIVE NOTIFICATION DISPLAY
+===================================================== */
+
+function showLiveMessage(message) {
+
+  const box =
+    document.getElementById(
+      "liveMessage"
+    );
+
+  box.textContent =
+    message;
+
+  box.classList.add("show");
+
+  setTimeout(() => {
+
+    box.classList.remove(
+      "show"
+    );
+
+  }, 5000);
+
+}
+
+
+/* =====================================================
+   SEND NOTIFICATION
+===================================================== */
+
+document.getElementById(
+  "send"
+).addEventListener(
+  "click",
+  async () => {
+
+    const input =
+      document.getElementById(
+        "notification"
+      );
+
+    const message =
+      input.value.trim();
+
+    if (!message) return;
+
+    const result =
+      await channel.send({
+
+        type: "broadcast",
+
+        event: "notification",
+
+        payload: {
+          message: message
+        }
+
+      });
+
+    if (result === "ok") {
+
+      input.value = "";
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   CONTROL PANEL
+===================================================== */
+
+const panel =
+  document.getElementById(
+    "panel"
+  );
+
+document.getElementById(
+  "close"
+).onclick = () => {
+
+  panel.classList.remove(
+    "open"
+  );
+
+};
+
+
+/* =====================================================
+   CASE64102
+===================================================== */
+
+const ADMIN_CODE =
+  "Case64102";
+
+let typed =
+  "";
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.target.tagName ===
+        "INPUT" ||
+      event.target.tagName ===
+        "TEXTAREA"
+    ) {
+      return;
+    }
+
+    typed += event.key;
+
+    if (
+      typed.length >
+      ADMIN_CODE.length
+    ) {
+
+      typed =
+        typed.slice(
+          -ADMIN_CODE.length
+        );
+
+    }
+
+    if (
+      typed === ADMIN_CODE
+    ) {
+
+      panel.classList.add(
+        "open"
+      );
+
+      loadTotalVisits();
+
+      typed = "";
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   SECRET TAP RHYTHM
+===================================================== */
+
+let taps = [];
+
+let lastTap = 0;
+
+document.addEventListener(
+  "pointerdown",
+  event => {
+
+    if (
+      event.target.closest(
+        "#panel"
+      )
+    ) {
+      return;
+    }
+
+    const now =
+      Date.now();
+
+    if (
+      now - lastTap >
+      900
+    ) {
+
+      taps = [];
+
+    }
+
+    taps.push(now);
+
+    lastTap = now;
+
+    /*
+      Five quick taps with
+      a pause in the middle.
+    */
+
+    if (taps.length >= 5) {
+
+      const gaps = [];
+
+      for (
+        let i = 1;
+        i < taps.length;
+        i++
+      ) {
+
+        gaps.push(
+          taps[i] -
+          taps[i - 1]
+        );
+
+      }
+
+      const valid =
+        gaps[0] < 350 &&
+        gaps[1] < 350 &&
+        gaps[2] > 350 &&
+        gaps[2] < 700 &&
+        gaps[3] < 350;
+
+      if (valid) {
+
+        panel.classList.add(
+          "open"
+        );
+
+        loadTotalVisits();
+
+      }
+
+      taps = [];
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   LARRY PHYSICS
+===================================================== */
+
+const larry =
+  document.getElementById(
+    "larry"
+  );
+
+const effects =
+  document.getElementById(
+    "effects"
+  );
+
+const flash =
+  document.getElementById(
+    "flash"
+  );
+
+const hint =
+  document.getElementById(
+    "hint"
+  );
+
+let angle = 0;
+let velocity = 0;
+let dragging = false;
+
+let previousAngle = 0;
+let previousTime = 0;
+
+let lastInteraction =
+  performance.now();
+
+let lastParticle =
+  0;
+
+let lastFlash =
+  0;
+
+
+/* =====================================================
+   POINTER ANGLE
+===================================================== */
 
 function getPointerAngle(event) {
 
   const rect =
     larry.getBoundingClientRect();
 
-  const centerX =
+  const x =
     rect.left +
     rect.width / 2;
 
-  const centerY =
+  const y =
     rect.top +
     rect.height / 2;
 
   return Math.atan2(
-    event.clientY - centerY,
-    event.clientX - centerX
+    event.clientY - y,
+    event.clientX - x
   );
 
 }
 
 
-/*
-  Prevent rotation jumps
-  across 180 degrees.
-*/
+/* =====================================================
+   ANGLE DIFFERENCE
+===================================================== */
 
-function angleDifference(a, b) {
+function angleDifference(a,b) {
 
-  let difference =
-    a - b;
+  let d = a - b;
 
-  while (
-    difference > Math.PI
-  ) {
+  while (d > Math.PI)
+    d -= Math.PI * 2;
 
-    difference -=
-      Math.PI * 2;
+  while (d < -Math.PI)
+    d += Math.PI * 2;
 
-  }
-
-  while (
-    difference < -Math.PI
-  ) {
-
-    difference +=
-      Math.PI * 2;
-
-  }
-
-  return difference;
+  return d;
 
 }
 
 
-/*
-  Render Larry.
-*/
+/* =====================================================
+   RENDER
+===================================================== */
 
 function render() {
 
@@ -307,118 +806,114 @@ function render() {
 }
 
 
-/*
-  Start dragging.
-*/
+/* =====================================================
+   START DRAG
+===================================================== */
 
 larry.addEventListener(
   "pointerdown",
-  (event) => {
+  event => {
 
     dragging = true;
-
-    resetHintTimer();
 
     larry.setPointerCapture(
       event.pointerId
     );
 
-    lastPointerAngle =
-      getPointerAngle(event);
+    previousAngle =
+      getPointerAngle(
+        event
+      );
 
-    lastTime =
+    previousTime =
       performance.now();
 
-    velocity *= 0.45;
+    lastInteraction =
+      performance.now();
+
+    hint.classList.remove(
+      "show"
+    );
 
   }
 );
 
 
-/*
-  Drag Larry.
-*/
+/* =====================================================
+   DRAG
+===================================================== */
 
 larry.addEventListener(
   "pointermove",
-  (event) => {
+  event => {
 
     if (!dragging) return;
-
-    resetHintTimer();
 
     const now =
       performance.now();
 
-    const pointerAngle =
-      getPointerAngle(event);
+    const currentAngle =
+      getPointerAngle(
+        event
+      );
 
     const difference =
       angleDifference(
-        pointerAngle,
-        lastPointerAngle
+        currentAngle,
+        previousAngle
       );
 
-    const deltaTime =
+    const dt =
       Math.max(
-        now - lastTime,
+        now -
+        previousTime,
         1
       );
 
+    angle +=
+      difference;
 
-    angle += difference;
-
-
-    const measuredVelocity =
+    const measured =
       difference /
-      deltaTime *
+      dt *
       16;
 
-
     velocity =
-      velocity * 0.78 +
-      measuredVelocity * 0.22;
-
+      velocity * .78 +
+      measured * .22;
 
     velocity =
       Math.max(
-        -0.58,
+        -.58,
         Math.min(
-          0.58,
+          .58,
           velocity
         )
       );
 
+    previousAngle =
+      currentAngle;
 
-    lastPointerAngle =
-      pointerAngle;
-
-    lastTime =
+    previousTime =
       now;
-
 
     render();
 
-    checkSpeed();
+    effectsCheck();
 
   }
 );
 
 
-/*
-  Release Larry.
-*/
+/* =====================================================
+   RELEASE
+===================================================== */
 
 function release() {
 
-  if (!dragging) return;
-
   dragging = false;
 
-  resetHintTimer();
-
 }
-
 
 larry.addEventListener(
   "pointerup",
@@ -431,98 +926,35 @@ larry.addEventListener(
 );
 
 
-/*
-  Physics loop.
-*/
+/* =====================================================
+   EFFECTS
+===================================================== */
 
-function physics() {
-
-  if (!dragging) {
-
-    angle += velocity;
-
-    velocity *= 0.988;
-
-
-    if (
-      Math.abs(velocity) <
-      0.00008
-    ) {
-
-      velocity = 0;
-
-    }
-
-
-    render();
-
-    checkSpeed();
-
-  }
-
-
-  /*
-    Show hint once after
-    2 seconds.
-  */
-
-  if (
-    !dragging &&
-    !hintShown &&
-    performance.now() -
-      lastInteraction >= 2000
-  ) {
-
-    hint.classList.add("show");
-
-    hintShown = true;
-
-  }
-
-
-  requestAnimationFrame(
-    physics
-  );
-
-}
-
-
-/*
-  Speed effects.
-*/
-
-function checkSpeed() {
+function effectsCheck() {
 
   const speed =
-    Math.abs(velocity);
+    Math.abs(
+      velocity
+    );
 
-
-  /*
-    Particles.
-  */
+  const now =
+    performance.now();
 
   if (
-    speed > 0.14 &&
-    performance.now() -
-      lastEffectTime > 100
+    speed > .14 &&
+    now - lastParticle > 100
   ) {
 
     createParticle();
 
-    lastEffectTime =
-      performance.now();
+    lastParticle =
+      now;
 
   }
 
-
-  /*
-    Fast spin flash.
-  */
-
   if (
-    speed > 0.34 &&
-    performance.now() -
-      lastFastFlash > 1000
+    speed > .34 &&
+    now - lastFlash > 1000
   ) {
 
     flash.classList.remove(
@@ -535,73 +967,67 @@ function checkSpeed() {
       "active"
     );
 
-    lastFastFlash =
-      performance.now();
+    lastFlash =
+      now;
 
   }
 
 }
 
 
-/*
-  Create particle.
-*/
+/* =====================================================
+   PARTICLE
+===================================================== */
 
 function createParticle() {
 
   const particle =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   particle.className =
     "particle";
 
-
   const rect =
     larry.getBoundingClientRect();
 
-
-  const centerX =
-    rect.left +
-    rect.width / 2;
-
-  const centerY =
-    rect.top +
-    rect.height / 2;
-
-
   particle.style.left =
-    centerX + "px";
+    rect.left +
+    rect.width / 2 +
+    "px";
 
   particle.style.top =
-    centerY + "px";
-
+    rect.top +
+    rect.height / 2 +
+    "px";
 
   const distance =
     25 +
-    Math.random() * 55;
+    Math.random() * 60;
 
-
-  const randomAngle =
+  const direction =
     Math.random() *
-    Math.PI * 2;
-
+    Math.PI *
+    2;
 
   particle.style.setProperty(
     "--x",
-    `${Math.cos(randomAngle) * distance}px`
+    Math.cos(direction) *
+      distance +
+      "px"
   );
-
 
   particle.style.setProperty(
     "--y",
-    `${Math.sin(randomAngle) * distance}px`
+    Math.sin(direction) *
+      distance +
+      "px"
   );
-
 
   effects.appendChild(
     particle
   );
-
 
   setTimeout(
     () => particle.remove(),
@@ -611,9 +1037,53 @@ function createParticle() {
 }
 
 
-/*
-  Start physics.
-*/
+/* =====================================================
+   PHYSICS LOOP
+===================================================== */
+
+function physics() {
+
+  if (!dragging) {
+
+    angle +=
+      velocity;
+
+    velocity *=
+      .988;
+
+    if (
+      Math.abs(velocity) <
+      .00008
+    ) {
+
+      velocity = 0;
+
+    }
+
+    render();
+
+    effectsCheck();
+
+  }
+
+  if (
+    !dragging &&
+    performance.now() -
+      lastInteraction >
+      2500
+  ) {
+
+    hint.classList.add(
+      "show"
+    );
+
+  }
+
+  requestAnimationFrame(
+    physics
+  );
+
+}
 
 physics();
 
@@ -621,4 +1091,3 @@ physics();
 
 </body>
 </html>
-```

@@ -1,0 +1,172 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>Larry Stats</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+
+  margin: 0;
+
+  width: 100%;
+  min-height: 100%;
+
+  background: white;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  color: #222;
+
+}
+
+body {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 100vh;
+
+}
+
+.container {
+
+  text-align: center;
+
+}
+
+.label {
+
+  font-size: 11px;
+
+  color: #999;
+
+  letter-spacing: 1px;
+
+}
+
+#count {
+
+  margin-top: 10px;
+
+  font-size: 64px;
+
+  font-weight: 400;
+
+}
+
+#status {
+
+  margin-top: 10px;
+
+  font-size: 10px;
+
+  color: #aaa;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+  <div class="label">
+    TOTAL LARRY VISITS
+  </div>
+
+  <div id="count">
+    ...
+  </div>
+
+  <div id="status">
+    Loading...
+  </div>
+
+</div>
+
+
+<script>
+
+async function loadCount() {
+
+  try {
+
+    const response =
+      await fetch(
+        "https://api.counterapi.dev/v1/larry-lworks/visits"
+      );
+
+
+    if (!response.ok) {
+      throw new Error(
+        "Counter unavailable"
+      );
+    }
+
+
+    const data =
+      await response.json();
+
+
+    document.getElementById(
+      "count"
+    ).textContent =
+      data.count;
+
+
+    document.getElementById(
+      "status"
+    ).textContent =
+      "Live counter";
+
+
+  } catch (error) {
+
+    document.getElementById(
+      "count"
+    ).textContent =
+      "—";
+
+
+    document.getElementById(
+      "status"
+    ).textContent =
+      "Could not load counter";
+
+  }
+
+}
+
+
+loadCount();
+
+</script>
+
+</body>
+
+</html>
+```

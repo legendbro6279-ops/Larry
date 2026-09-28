@@ -12,38 +12,217 @@
   box-sizing: border-box;
 }
 
-html, body {
+:root {
+  --bg: #ffffff;
+  --text: #222222;
+  --accent: #222222;
+  --particle: #444444;
+  --panel-bg: rgba(255,255,255,.94);
+}
+
+html,
+body {
   margin: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: white;
-  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
 }
 
+body {
+  transition:
+    background .5s ease,
+    color .5s ease,
+    filter .5s ease;
+}
+
+/* =========================
+   BACKGROUND EFFECTS
+========================= */
+
+#background {
+  position: fixed;
+  inset: 0;
+  z-index: -20;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity .5s ease;
+}
+
+#gradient {
+  position: absolute;
+  inset: -30%;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(100,150,255,.22), transparent 30%),
+    radial-gradient(circle at 80% 70%, rgba(255,100,180,.18), transparent 30%),
+    radial-gradient(circle at 50% 50%, rgba(100,255,220,.15), transparent 35%);
+  animation: gradientMove 12s ease-in-out infinite alternate;
+}
+
+@keyframes gradientMove {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(12deg) scale(1.15);
+  }
+}
+
+#grid {
+  position: absolute;
+  inset: -100%;
+  opacity: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg);
+  animation: gridMove 4s linear infinite;
+}
+
+@keyframes gridMove {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 40px;
+  }
+}
+
+#scanlines {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,.06) 4px
+    );
+}
+
+#vignette {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 35%,
+      rgba(0,0,0,.28) 100%
+    );
+}
+
+#aurora {
+  position: absolute;
+  width: 120%;
+  height: 100%;
+  left: -10%;
+  top: 0;
+  opacity: 0;
+  filter: blur(70px);
+  background:
+    linear-gradient(
+      120deg,
+      rgba(0,200,255,.18),
+      rgba(150,0,255,.14),
+      rgba(255,0,120,.16)
+    );
+  animation: aurora 10s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  from {
+    transform: translateX(-8%) skewX(-5deg);
+  }
+  to {
+    transform: translateX(8%) skewX(5deg);
+  }
+}
+
+/* =========================
+   MAIN
+========================= */
+
 #scene {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 #larry {
-  color: #222;
-  font-size: clamp(70px, 14vw, 110px);
+  position: relative;
+  z-index: 10;
+  color: var(--text);
+  font-size: 100px;
+  font-weight: 400;
   letter-spacing: 2px;
   padding: 20px 35px;
   cursor: grab;
   transform-origin: center;
   will-change: transform;
+  transition:
+    color .35s ease,
+    text-shadow .35s ease,
+    filter .35s ease;
 }
 
 #larry:active {
   cursor: grabbing;
+}
+
+#larry.glow {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 35px currentColor;
+}
+
+#larry.pulse {
+  animation: larryPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes larryPulse {
+  0%,100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.07;
+  }
+}
+
+#larry.rainbow {
+  animation: rainbowText 3s linear infinite;
+}
+
+@keyframes rainbowText {
+  0% {
+    color: #ff004c;
+  }
+  20% {
+    color: #ffb000;
+  }
+  40% {
+    color: #00d084;
+  }
+  60% {
+    color: #00aaff;
+  }
+  80% {
+    color: #9d00ff;
+  }
+  100% {
+    color: #ff004c;
+  }
 }
 
 #made {
@@ -52,32 +231,62 @@ html, body {
   bottom: 6px;
   font-size: 8px;
   color: #aaa;
+  z-index: 20;
 }
+
+/* =========================
+   EFFECTS
+========================= */
 
 #effects {
   position: fixed;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 5;
 }
 
 .particle {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #555;
-  animation: particle .8s ease-out forwards;
+  background: var(--particle);
+  box-shadow: 0 0 8px currentColor;
+  animation: particle .9s cubic-bezier(.16,1,.3,1) forwards;
 }
 
 @keyframes particle {
   from {
-    opacity: .4;
+    opacity: .8;
     transform: translate(0,0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translate(var(--x),var(--y)) scale(0);
+    transform:
+      translate(var(--x),var(--y))
+      scale(0);
+  }
+}
+
+.trail {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--particle);
+  pointer-events: none;
+  animation: trailFade .6s ease-out forwards;
+}
+
+@keyframes trailFade {
+  from {
+    opacity: .3;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: .1;
   }
 }
 
@@ -86,33 +295,81 @@ html, body {
   inset: 0;
   pointer-events: none;
   opacity: 0;
+  z-index: 100;
 }
 
 #flash.active {
-  animation: flash .3s ease-out;
+  animation: flash .35s ease-out;
 }
 
 @keyframes flash {
-  0% { opacity: 0; }
-  25% { opacity: .2; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+    background: white;
+  }
+  20% {
+    opacity: .3;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
-/* PANEL */
+/* =========================
+   HINT
+========================= */
+
+#hint {
+  position: fixed;
+  top: calc(50% + 105px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #999;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 1s;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#hint.show {
+  opacity: 1;
+}
+
+/* =========================
+   PANEL
+========================= */
 
 #panel {
   position: fixed;
   top: 0;
   right: 0;
-  width: min(380px, 90vw);
-  height: 100vh;
-  background: rgba(255,255,255,.98);
-  box-shadow: -10px 0 35px rgba(0,0,0,.15);
-  transform: translateX(100%);
-  transition: transform .35s cubic-bezier(.16,1,.3,1);
+
+  width: min(430px, 94vw);
+  height: 100%;
+
+  background: var(--panel-bg);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border-left: 1px solid rgba(0,0,0,.08);
+
+  box-shadow:
+    -20px 0 70px rgba(0,0,0,.16);
+
+  transform: translateX(110%);
+
+  transition:
+    transform .55s cubic-bezier(.16,1,.3,1);
+
   z-index: 1000;
-  padding: 25px;
+
+  padding: 22px;
+
   overflow-y: auto;
+  overflow-x: hidden;
+
   touch-action: auto;
 }
 
@@ -120,172 +377,1069 @@ html, body {
   transform: translateX(0);
 }
 
+#panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,.35),
+      transparent 30%,
+      rgba(0,0,0,.025)
+    );
+}
+
+#panelHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
 #panelTitle {
-  font-size: 22px;
-  margin-bottom: 25px;
+  font-size: 23px;
+  letter-spacing: -.5px;
 }
 
 #close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 50%;
-  background: #eee;
-  font-size: 20px;
+  background: rgba(0,0,0,.06);
+  font-size: 22px;
   cursor: pointer;
+  transition:
+    transform .2s ease,
+    background .2s ease;
 }
 
-.stat {
-  background: #f5f5f5;
-  border-radius: 15px;
-  padding: 18px;
+#close:hover {
+  transform: rotate(90deg);
+  background: rgba(0,0,0,.1);
+}
+
+/* =========================
+   TABS
+========================= */
+
+#tabs {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 6px;
+  padding: 5px;
+  background: rgba(0,0,0,.05);
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+.tab {
+  border: 0;
+  padding: 10px 4px;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  color: #888;
+  transition:
+    background .25s ease,
+    color .25s ease,
+    transform .2s ease;
+}
+
+.tab.active {
+  background: white;
+  color: #222;
+  box-shadow: 0 3px 12px rgba(0,0,0,.08);
+}
+
+.tab:active {
+  transform: scale(.96);
+}
+
+.tabContent {
+  display: none;
+  animation: tabIn .3s ease;
+}
+
+.tabContent.active {
+  display: block;
+}
+
+@keyframes tabIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+  position: relative;
+  background: rgba(245,245,245,.75);
+  border: 1px solid rgba(0,0,0,.045);
+  border-radius: 17px;
+  padding: 16px;
   margin-bottom: 12px;
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
 }
 
-.statLabel {
-  color: #999;
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,.06);
+}
+
+.cardTitle {
   font-size: 10px;
   letter-spacing: 1px;
+  color: #999;
+  margin-bottom: 10px;
 }
 
 .statNumber {
   font-size: 40px;
-  margin-top: 5px;
 }
 
 #connection {
   font-size: 11px;
-  color: #888;
-  margin: 15px 0 25px;
+  color: #999;
+  margin-bottom: 16px;
 }
 
-#notification {
-  width: 100%;
-  min-height: 100px;
-  resize: vertical;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 12px;
-  font-family: Arial,sans-serif;
-  font-size: 14px;
-  outline: none;
+/* =========================
+   BUTTONS
+========================= */
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 8px;
 }
 
-#notification:focus {
-  border-color: #999;
-}
-
-#send {
-  width: 100%;
-  margin-top: 10px;
-  padding: 13px;
+.controlButton {
+  min-height: 45px;
   border: 0;
   border-radius: 12px;
+  background: white;
+  color: #222;
+  cursor: pointer;
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
+}
+
+.controlButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(0,0,0,.1);
+}
+
+.controlButton:active {
+  transform: scale(.96);
+}
+
+.controlButton.dark {
   background: #222;
   color: white;
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+textarea,
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 11px;
+  padding: 11px;
+  background: white;
+  outline: none;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #888;
+}
+
+/* =========================
+   SWITCH
+========================= */
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 10px 0;
+}
+
+.switchLabel {
+  font-size: 13px;
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ddd;
+  border-radius: 30px;
   cursor: pointer;
-  font-size: 14px;
+  transition: .25s;
 }
 
-#send:active {
-  transform: scale(.98);
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: .25s;
+  box-shadow: 0 2px 5px rgba(0,0,0,.2);
 }
 
-/* LIVE MESSAGE */
+.switch input:checked + .slider {
+  background: #222;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* =========================
+   SLIDERS
+========================= */
+
+.sliderRow {
+  margin: 14px 0;
+}
+
+.sliderTop {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #222;
+}
+
+/* =========================
+   COLOR
+========================= */
+
+.colorRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.colorInput {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  padding: 3px;
+  background: white;
+}
+
+/* =========================
+   LIVE MESSAGE
+========================= */
 
 #liveMessage {
   position: fixed;
   top: 20px;
   left: 50%;
-  width: min(500px, 90vw);
-  padding: 15px 20px;
+  width: min(550px,90vw);
+  padding: 16px 20px;
   background: #222;
   color: white;
-  border-radius: 14px;
+  border-radius: 15px;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,.2);
-  transform: translate(-50%, -160%);
-  transition: transform .4s cubic-bezier(.16,1,.3,1);
-  z-index: 2000;
+
+  box-shadow:
+    0 12px 45px rgba(0,0,0,.22);
+
+  transform:
+    translate(-50%,-180%);
+
+  transition:
+    transform .55s cubic-bezier(.16,1,.3,1);
+
+  z-index: 3000;
+
   pointer-events: none;
 }
 
 #liveMessage.show {
-  transform: translate(-50%, 0);
+  transform:
+    translate(-50%,0);
 }
 
-#hint {
-  position: fixed;
-  top: calc(50% + 105px);
-  left: 50%;
-  transform: translateX(-50%);
-  color: #aaa;
-  font-size: 11px;
-  opacity: 0;
-  transition: opacity 1s;
-  pointer-events: none;
+/* =========================
+   SHAKE
+========================= */
+
+body.shake {
+  animation: shake .35s ease;
 }
 
-#hint.show {
-  opacity: 1;
+@keyframes shake {
+  0%,100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-7px,4px);
+  }
+  40% {
+    transform: translate(6px,-5px);
+  }
+  60% {
+    transform: translate(-4px,-4px);
+  }
+  80% {
+    transform: translate(5px,3px);
+  }
+}
+
+/* =========================
+   DARK MODE
+========================= */
+
+body.dark {
+  --bg: #090909;
+  --text: #f5f5f5;
+  --particle: #ffffff;
+  --panel-bg: rgba(20,20,20,.94);
+}
+
+body.dark #panel {
+  color: white;
+  border-color: rgba(255,255,255,.08);
+}
+
+body.dark .card {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.07);
+}
+
+body.dark .controlButton,
+body.dark textarea,
+body.dark input,
+body.dark select {
+  background: #181818;
+  color: white;
+  border-color: #333;
+}
+
+body.dark #tabs {
+  background: rgba(255,255,255,.06);
+}
+
+body.dark .tab.active {
+  background: #252525;
+  color: white;
+}
+
+body.dark #close {
+  background: #292929;
+  color: white;
+}
+
+/* =========================
+   CHROMATIC
+========================= */
+
+body.chromatic #larry {
+  text-shadow:
+    -3px 0 rgba(255,0,0,.35),
+    3px 0 rgba(0,150,255,.35);
+}
+
+/* =========================
+   HIGH CONTRAST
+========================= */
+
+body.highContrast {
+  filter: contrast(1.25);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:600px) {
+
+  #larry {
+    font-size: 70px;
+  }
+
+  #panel {
+    width: 94vw;
+  }
+
 }
 </style>
 </head>
 
 <body>
 
-<div id="scene">
-  <div id="effects"></div>
-  <div id="larry">Larry</div>
-  <div id="hint">Drag the text to spin</div>
-  <div id="flash"></div>
+<div id="background">
+  <div id="gradient"></div>
+  <div id="grid"></div>
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="aurora"></div>
 </div>
 
-<div id="made">Made by LwOrks</div>
+<div id="scene">
+  <div id="effects"></div>
 
-<!-- CONTROL PANEL -->
+  <div id="larry">
+    Larry
+  </div>
+
+  <div id="hint">
+    Drag Larry to spin
+  </div>
+</div>
+
+<div id="made">
+  Made by LwOrks
+</div>
+
+<div id="flash"></div>
+
+<!-- =========================
+     CONTROL PANEL
+========================= -->
 
 <div id="panel">
 
-  <button id="close">×</button>
+  <div id="panelHeader">
 
-  <div id="panelTitle">
-    Larry Control
-  </div>
-
-  <div id="connection">
-    Connecting to Larry backend...
-  </div>
-
-  <div class="stat">
-    <div class="statLabel">ACTIVE VISITORS</div>
-    <div class="statNumber" id="active">0</div>
-  </div>
-
-  <div class="stat">
-    <div class="statLabel">TOTAL VISITS</div>
-    <div class="statNumber" id="total">0</div>
-  </div>
-
-  <div class="stat">
-
-    <div class="statLabel">
-      LIVE NOTIFICATION
+    <div id="panelTitle">
+      Larry Control
     </div>
 
-    <br>
-
-    <textarea
-      id="notification"
-      placeholder="Type something to send to everyone..."
-    ></textarea>
-
-    <button id="send">
-      Send to everyone
+    <button
+      id="close"
+      type="button"
+    >
+      ×
     </button>
+
+  </div>
+
+  <div id="tabs">
+
+    <button
+      class="tab active"
+      data-tab="dashboard"
+      type="button"
+    >
+      Dashboard
+    </button>
+
+    <button
+      class="tab"
+      data-tab="effects"
+      type="button"
+    >
+      Effects
+    </button>
+
+    <button
+      class="tab"
+      data-tab="settings"
+      type="button"
+    >
+      Settings
+    </button>
+
+  </div>
+
+  <!-- =====================
+       DASHBOARD
+  ====================== -->
+
+  <div
+    id="dashboard"
+    class="tabContent active"
+  >
+
+    <div id="connection">
+      Connecting to backend...
+    </div>
+
+    <div class="card">
+
+      <div class="cardTitle">
+        ACTIVE VISITORS
+      </div>
+
+      <div
+        class="statNumber"
+        id="active"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="cardTitle">
+        TOTAL VISITS
+      </div>
+
+      <div
+        class="statNumber"
+        id="total"
+      >
+        0
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="cardTitle">
+        QUICK EFFECTS
+      </div>
+
+      <div class="buttonGrid">
+
+        <button
+          class="controlButton"
+          id="spin"
+          type="button"
+        >
+          Spin
+        </button>
+
+        <button
+          class="controlButton"
+          id="burst"
+          type="button"
+        >
+          Particle Burst
+        </button>
+
+        <button
+          class="controlButton"
+          id="flashButton"
+          type="button"
+        >
+          Flash
+        </button>
+
+        <button
+          class="controlButton"
+          id="shakeButton"
+          type="button"
+        >
+          Shake
+        </button>
+
+        <button
+          class="controlButton"
+          id="randomButton"
+          type="button"
+        >
+          Randomize
+        </button>
+
+        <button
+          class="controlButton dark"
+          id="chaosButton"
+          type="button"
+        >
+          CHAOS
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="cardTitle">
+        LIVE NOTIFICATION
+      </div>
+
+      <textarea
+        id="notification"
+        placeholder="Type something to send to everyone..."
+      ></textarea>
+
+      <button
+        id="send"
+        class="controlButton dark"
+        type="button"
+        style="width:100%;margin-top:10px"
+      >
+        Send to everyone
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================
+       EFFECTS
+  ====================== -->
+
+  <div
+    id="effectsTab"
+    class="tabContent"
+  >
+
+    <div class="card">
+
+      <div class="cardTitle">
+        LARRY EFFECTS
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Glow</span>
+
+        <label class="switch">
+          <input
+            id="glowToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Pulse</span>
+
+        <label class="switch">
+          <input
+            id="pulseToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Rainbow</span>
+
+        <label class="switch">
+          <input
+            id="rainbowToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Particles</span>
+
+        <label class="switch">
+          <input
+            id="particlesToggle"
+            type="checkbox"
+            checked
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Spin Trails</span>
+
+        <label class="switch">
+          <input
+            id="trailsToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Auto Spin</span>
+
+        <label class="switch">
+          <input
+            id="autoSpinToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        SCREEN EFFECTS
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Gradient</span>
+
+        <label class="switch">
+          <input
+            id="gradientToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Moving Grid</span>
+
+        <label class="switch">
+          <input
+            id="gridToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Scanlines</span>
+
+        <label class="switch">
+          <input
+            id="scanToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Vignette</span>
+
+        <label class="switch">
+          <input
+            id="vignetteToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Aurora</span>
+
+        <label class="switch">
+          <input
+            id="auroraToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="switchRow">
+        <span class="switchLabel">Chromatic</span>
+
+        <label class="switch">
+          <input
+            id="chromaticToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        INTENSITY
+      </div>
+
+      <div class="sliderRow">
+
+        <div class="sliderTop">
+          <span>Larry Size</span>
+          <span id="sizeValue">100px</span>
+        </div>
+
+        <input
+          id="sizeSlider"
+          type="range"
+          min="40"
+          max="180"
+          value="100"
+        >
+
+      </div>
+
+      <div class="sliderRow">
+
+        <div class="sliderTop">
+          <span>Spin Power</span>
+          <span id="spinValue">100%</span>
+        </div>
+
+        <input
+          id="spinSlider"
+          type="range"
+          min="10"
+          max="300"
+          value="100"
+        >
+
+      </div>
+
+      <div class="sliderRow">
+
+        <div class="sliderTop">
+          <span>Particle Amount</span>
+          <span id="particleValue">20</span>
+        </div>
+
+        <input
+          id="particleSlider"
+          type="range"
+          min="1"
+          max="60"
+          value="20"
+        >
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================
+       SETTINGS
+  ====================== -->
+
+  <div
+    id="settingsTab"
+    class="tabContent"
+  >
+
+    <div class="card">
+
+      <div class="cardTitle">
+        APPEARANCE
+      </div>
+
+      <div class="switchRow">
+
+        <span class="switchLabel">
+          Dark Mode
+        </span>
+
+        <label class="switch">
+          <input
+            id="darkToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <div class="switchRow">
+
+        <span class="switchLabel">
+          High Contrast
+        </span>
+
+        <label class="switch">
+          <input
+            id="contrastToggle"
+            type="checkbox"
+          >
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        LARRY TEXT
+      </div>
+
+      <input
+        id="textInput"
+        type="text"
+        value="Larry"
+        maxlength="30"
+      >
+
+      <div class="sliderRow">
+
+        <div class="sliderTop">
+          <span>Letter Spacing</span>
+          <span id="spacingValue">2px</span>
+        </div>
+
+        <input
+          id="spacingSlider"
+          type="range"
+          min="-5"
+          max="15"
+          value="2"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        COLORS
+      </div>
+
+      <div class="colorRow">
+
+        <div>
+          <div class="cardTitle">
+            BACKGROUND
+          </div>
+
+          <input
+            class="colorInput"
+            id="backgroundColor"
+            type="color"
+            value="#ffffff"
+          >
+        </div>
+
+        <div>
+          <div class="cardTitle">
+            LARRY
+          </div>
+
+          <input
+            class="colorInput"
+            id="textColor"
+            type="color"
+            value="#222222"
+          >
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        PANEL
+      </div>
+
+      <div class="switchRow">
+
+        <span class="switchLabel">
+          Glass Blur
+        </span>
+
+        <label class="switch">
+          <input
+            id="blurToggle"
+            type="checkbox"
+            checked
+          >
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <div class="sliderRow">
+
+        <div class="sliderTop">
+          <span>Panel Opacity</span>
+          <span id="opacityValue">94%</span>
+        </div>
+
+        <input
+          id="opacitySlider"
+          type="range"
+          min="70"
+          max="100"
+          value="94"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="cardTitle">
+        RESET
+      </div>
+
+      <button
+        class="controlButton"
+        id="resetSettings"
+        type="button"
+        style="width:100%"
+      >
+        Reset Everything
+      </button>
+
+    </div>
 
   </div>
 
@@ -296,7 +1450,7 @@ html, body {
 <script>
 
 /* =====================================================
-   SUPABASE CONNECTION
+   SUPABASE
 ===================================================== */
 
 const SUPABASE_URL =
@@ -313,11 +1467,185 @@ const supabase =
 
 
 /* =====================================================
+   ELEMENTS
+===================================================== */
+
+const larry =
+  document.getElementById("larry");
+
+const panel =
+  document.getElementById("panel");
+
+const effects =
+  document.getElementById("effects");
+
+const flash =
+  document.getElementById("flash");
+
+const hint =
+  document.getElementById("hint");
+
+
+/* =====================================================
+   PANEL
+===================================================== */
+
+function openPanel() {
+  panel.classList.add("open");
+  loadTotalVisits();
+}
+
+function closePanel() {
+  panel.classList.remove("open");
+}
+
+document
+  .getElementById("close")
+  .addEventListener(
+    "click",
+    closePanel
+  );
+
+
+/* DOUBLE CLICK LARRY */
+
+larry.addEventListener(
+  "dblclick",
+  event => {
+
+    event.preventDefault();
+
+    openPanel();
+
+  }
+);
+
+
+/* =====================================================
+   KEY CODE
+===================================================== */
+
+const ADMIN_CODE =
+  "Case64102";
+
+let typed = "";
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.target.tagName === "INPUT" ||
+      event.target.tagName === "TEXTAREA"
+    ) {
+      return;
+    }
+
+    typed += event.key;
+
+    if (
+      typed.length >
+      ADMIN_CODE.length
+    ) {
+      typed =
+        typed.slice(
+          -ADMIN_CODE.length
+        );
+    }
+
+    if (
+      typed === ADMIN_CODE
+    ) {
+
+      typed = "";
+
+      openPanel();
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   TABS
+===================================================== */
+
+document
+  .querySelectorAll(".tab")
+  .forEach(tab => {
+
+    tab.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(".tab")
+          .forEach(t =>
+            t.classList.remove(
+              "active"
+            )
+          );
+
+        document
+          .querySelectorAll(".tabContent")
+          .forEach(content =>
+            content.classList.remove(
+              "active"
+            )
+          );
+
+        tab.classList.add(
+          "active"
+        );
+
+        const name =
+          tab.dataset.tab;
+
+        if (
+          name === "dashboard"
+        ) {
+
+          document
+            .getElementById("dashboard")
+            .classList.add("active");
+
+        }
+
+        if (
+          name === "effects"
+        ) {
+
+          document
+            .getElementById("effectsTab")
+            .classList.add("active");
+
+        }
+
+        if (
+          name === "settings"
+        ) {
+
+          document
+            .getElementById("settingsTab")
+            .classList.add("active");
+
+        }
+
+      }
+    );
+
+  });
+
+
+/* =====================================================
    VISITOR ID
 ===================================================== */
 
 let visitorId =
-  sessionStorage.getItem("larry_visitor_id");
+  sessionStorage.getItem(
+    "larry_visitor_id"
+  );
 
 if (!visitorId) {
 
@@ -333,7 +1661,7 @@ if (!visitorId) {
 
 
 /* =====================================================
-   REALTIME CHANNEL
+   REALTIME
 ===================================================== */
 
 const channel =
@@ -349,10 +1677,6 @@ const channel =
   );
 
 
-/* =====================================================
-   ACTIVE VISITORS
-===================================================== */
-
 channel.on(
   "presence",
   {
@@ -365,13 +1689,19 @@ channel.on(
 
     let count = 0;
 
-    for (const key in state) {
-      count += state[key].length;
+    for (
+      const key in state
+    ) {
+
+      count +=
+        state[key].length;
+
     }
 
-    document.getElementById(
-      "active"
-    ).textContent = count;
+    document
+      .getElementById("active")
+      .textContent =
+      count;
 
   }
 );
@@ -393,15 +1723,41 @@ channel.on(
 
     if (!message) return;
 
-    showLiveMessage(message);
+    showLiveMessage(
+      message
+    );
 
   }
 );
 
 
-/* =====================================================
-   CONNECT
-===================================================== */
+function showLiveMessage(
+  message
+) {
+
+  const box =
+    document.getElementById(
+      "liveMessage"
+    );
+
+  box.textContent =
+    message;
+
+  box.classList.add(
+    "show"
+  );
+
+  setTimeout(
+    () => {
+      box.classList.remove(
+        "show"
+      );
+    },
+    5000
+  );
+
+}
+
 
 channel.subscribe(
   async status => {
@@ -411,7 +1767,9 @@ channel.subscribe(
         "connection"
       );
 
-    if (status === "SUBSCRIBED") {
+    if (
+      status === "SUBSCRIBED"
+    ) {
 
       connection.textContent =
         "● Backend connected";
@@ -426,7 +1784,6 @@ channel.subscribe(
       });
 
     }
-
     else {
 
       connection.textContent =
@@ -439,7 +1796,7 @@ channel.subscribe(
 
 
 /* =====================================================
-   TOTAL VISITS
+   VISITS
 ===================================================== */
 
 async function recordVisit() {
@@ -450,10 +1807,13 @@ async function recordVisit() {
       .insert({});
 
   if (!error) {
+
     loadTotalVisits();
+
   }
 
 }
+
 
 async function loadTotalVisits() {
 
@@ -470,9 +1830,10 @@ async function loadTotalVisits() {
 
   if (!error) {
 
-    document.getElementById(
-      "total"
-    ).textContent = count ?? 0;
+    document
+      .getElementById("total")
+      .textContent =
+      count ?? 0;
 
   }
 
@@ -482,259 +1843,12 @@ recordVisit();
 
 
 /* =====================================================
-   LIVE NOTIFICATION DISPLAY
-===================================================== */
-
-function showLiveMessage(message) {
-
-  const box =
-    document.getElementById(
-      "liveMessage"
-    );
-
-  box.textContent =
-    message;
-
-  box.classList.add("show");
-
-  setTimeout(() => {
-
-    box.classList.remove(
-      "show"
-    );
-
-  }, 5000);
-
-}
-
-
-/* =====================================================
-   SEND NOTIFICATION
-===================================================== */
-
-document.getElementById(
-  "send"
-).addEventListener(
-  "click",
-  async () => {
-
-    const input =
-      document.getElementById(
-        "notification"
-      );
-
-    const message =
-      input.value.trim();
-
-    if (!message) return;
-
-    const result =
-      await channel.send({
-
-        type: "broadcast",
-
-        event: "notification",
-
-        payload: {
-          message: message
-        }
-
-      });
-
-    if (result === "ok") {
-
-      input.value = "";
-
-    }
-
-  }
-);
-
-
-/* =====================================================
-   CONTROL PANEL
-===================================================== */
-
-const panel =
-  document.getElementById(
-    "panel"
-  );
-
-document.getElementById(
-  "close"
-).onclick = () => {
-
-  panel.classList.remove(
-    "open"
-  );
-
-};
-
-
-/* =====================================================
-   CASE64102
-===================================================== */
-
-const ADMIN_CODE =
-  "Case64102";
-
-let typed =
-  "";
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.target.tagName ===
-        "INPUT" ||
-      event.target.tagName ===
-        "TEXTAREA"
-    ) {
-      return;
-    }
-
-    typed += event.key;
-
-    if (
-      typed.length >
-      ADMIN_CODE.length
-    ) {
-
-      typed =
-        typed.slice(
-          -ADMIN_CODE.length
-        );
-
-    }
-
-    if (
-      typed === ADMIN_CODE
-    ) {
-
-      panel.classList.add(
-        "open"
-      );
-
-      loadTotalVisits();
-
-      typed = "";
-
-    }
-
-  }
-);
-
-
-/* =====================================================
-   SECRET TAP RHYTHM
-===================================================== */
-
-let taps = [];
-
-let lastTap = 0;
-
-document.addEventListener(
-  "pointerdown",
-  event => {
-
-    if (
-      event.target.closest(
-        "#panel"
-      )
-    ) {
-      return;
-    }
-
-    const now =
-      Date.now();
-
-    if (
-      now - lastTap >
-      900
-    ) {
-
-      taps = [];
-
-    }
-
-    taps.push(now);
-
-    lastTap = now;
-
-    /*
-      Five quick taps with
-      a pause in the middle.
-    */
-
-    if (taps.length >= 5) {
-
-      const gaps = [];
-
-      for (
-        let i = 1;
-        i < taps.length;
-        i++
-      ) {
-
-        gaps.push(
-          taps[i] -
-          taps[i - 1]
-        );
-
-      }
-
-      const valid =
-        gaps[0] < 350 &&
-        gaps[1] < 350 &&
-        gaps[2] > 350 &&
-        gaps[2] < 700 &&
-        gaps[3] < 350;
-
-      if (valid) {
-
-        panel.classList.add(
-          "open"
-        );
-
-        loadTotalVisits();
-
-      }
-
-      taps = [];
-
-    }
-
-  }
-);
-
-
-/* =====================================================
    LARRY PHYSICS
 ===================================================== */
 
-const larry =
-  document.getElementById(
-    "larry"
-  );
-
-const effects =
-  document.getElementById(
-    "effects"
-  );
-
-const flash =
-  document.getElementById(
-    "flash"
-  );
-
-const hint =
-  document.getElementById(
-    "hint"
-  );
-
 let angle = 0;
 let velocity = 0;
+
 let dragging = false;
 
 let previousAngle = 0;
@@ -742,6 +1856,21 @@ let previousTime = 0;
 
 let lastInteraction =
   performance.now();
+
+let autoSpin =
+  false;
+
+let spinPower =
+  1;
+
+let particlesEnabled =
+  true;
+
+let trailsEnabled =
+  false;
+
+let particleAmount =
+  20;
 
 let lastParticle =
   0;
@@ -775,28 +1904,27 @@ function getPointerAngle(event) {
 }
 
 
-/* =====================================================
-   ANGLE DIFFERENCE
-===================================================== */
-
 function angleDifference(a,b) {
 
-  let d = a - b;
+  let d =
+    a - b;
 
-  while (d > Math.PI)
+  while (
+    d > Math.PI
+  ) {
     d -= Math.PI * 2;
+  }
 
-  while (d < -Math.PI)
+  while (
+    d < -Math.PI
+  ) {
     d += Math.PI * 2;
+  }
 
   return d;
 
 }
 
-
-/* =====================================================
-   RENDER
-===================================================== */
 
 function render() {
 
@@ -807,7 +1935,7 @@ function render() {
 
 
 /* =====================================================
-   START DRAG
+   DRAG
 ===================================================== */
 
 larry.addEventListener(
@@ -839,10 +1967,6 @@ larry.addEventListener(
 );
 
 
-/* =====================================================
-   DRAG
-===================================================== */
-
 larry.addEventListener(
   "pointermove",
   event => {
@@ -865,8 +1989,7 @@ larry.addEventListener(
 
     const dt =
       Math.max(
-        now -
-        previousTime,
+        now - previousTime,
         1
       );
 
@@ -876,7 +1999,8 @@ larry.addEventListener(
     const measured =
       difference /
       dt *
-      16;
+      16 *
+      spinPower;
 
     velocity =
       velocity * .78 +
@@ -884,9 +2008,9 @@ larry.addEventListener(
 
     velocity =
       Math.max(
-        -.58,
+        -.9,
         Math.min(
-          .58,
+          .9,
           velocity
         )
       );
@@ -905,14 +2029,8 @@ larry.addEventListener(
 );
 
 
-/* =====================================================
-   RELEASE
-===================================================== */
-
 function release() {
-
   dragging = false;
-
 }
 
 larry.addEventListener(
@@ -927,123 +2045,20 @@ larry.addEventListener(
 
 
 /* =====================================================
-   EFFECTS
-===================================================== */
-
-function effectsCheck() {
-
-  const speed =
-    Math.abs(
-      velocity
-    );
-
-  const now =
-    performance.now();
-
-  if (
-    speed > .14 &&
-    now - lastParticle > 100
-  ) {
-
-    createParticle();
-
-    lastParticle =
-      now;
-
-  }
-
-  if (
-    speed > .34 &&
-    now - lastFlash > 1000
-  ) {
-
-    flash.classList.remove(
-      "active"
-    );
-
-    void flash.offsetWidth;
-
-    flash.classList.add(
-      "active"
-    );
-
-    lastFlash =
-      now;
-
-  }
-
-}
-
-
-/* =====================================================
-   PARTICLE
-===================================================== */
-
-function createParticle() {
-
-  const particle =
-    document.createElement(
-      "div"
-    );
-
-  particle.className =
-    "particle";
-
-  const rect =
-    larry.getBoundingClientRect();
-
-  particle.style.left =
-    rect.left +
-    rect.width / 2 +
-    "px";
-
-  particle.style.top =
-    rect.top +
-    rect.height / 2 +
-    "px";
-
-  const distance =
-    25 +
-    Math.random() * 60;
-
-  const direction =
-    Math.random() *
-    Math.PI *
-    2;
-
-  particle.style.setProperty(
-    "--x",
-    Math.cos(direction) *
-      distance +
-      "px"
-  );
-
-  particle.style.setProperty(
-    "--y",
-    Math.sin(direction) *
-      distance +
-      "px"
-  );
-
-  effects.appendChild(
-    particle
-  );
-
-  setTimeout(
-    () => particle.remove(),
-    850
-  );
-
-}
-
-
-/* =====================================================
-   PHYSICS LOOP
+   PHYSICS
 ===================================================== */
 
 function physics() {
 
   if (!dragging) {
+
+    if (autoSpin) {
+
+      velocity +=
+        .002 *
+        spinPower;
+
+    }
 
     angle +=
       velocity;
@@ -1086,6 +2101,866 @@ function physics() {
 }
 
 physics();
+
+
+/* =====================================================
+   PARTICLES
+===================================================== */
+
+function createParticle() {
+
+  const particle =
+    document.createElement(
+      "div"
+    );
+
+  particle.className =
+    "particle";
+
+  const rect =
+    larry.getBoundingClientRect();
+
+  particle.style.left =
+    rect.left +
+    rect.width / 2 +
+    "px";
+
+  particle.style.top =
+    rect.top +
+    rect.height / 2 +
+    "px";
+
+  const distance =
+    30 +
+    Math.random() *
+    90;
+
+  const direction =
+    Math.random() *
+    Math.PI *
+    2;
+
+  particle.style.setProperty(
+    "--x",
+    Math.cos(direction) *
+      distance +
+      "px"
+  );
+
+  particle.style.setProperty(
+    "--y",
+    Math.sin(direction) *
+      distance +
+      "px"
+  );
+
+  effects.appendChild(
+    particle
+  );
+
+  setTimeout(
+    () => particle.remove(),
+    900
+  );
+
+}
+
+
+function particleBurst(
+  amount = particleAmount
+) {
+
+  for (
+    let i = 0;
+    i < amount;
+    i++
+  ) {
+
+    setTimeout(
+      createParticle,
+      i * 8
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   TRAILS
+===================================================== */
+
+function createTrail() {
+
+  if (!trailsEnabled)
+    return;
+
+  const rect =
+    larry.getBoundingClientRect();
+
+  const trail =
+    document.createElement(
+      "div"
+    );
+
+  trail.className =
+    "trail";
+
+  trail.style.left =
+    rect.left +
+    rect.width / 2 +
+    "px";
+
+  trail.style.top =
+    rect.top +
+    rect.height / 2 +
+    "px";
+
+  effects.appendChild(
+    trail
+  );
+
+  setTimeout(
+    () => trail.remove(),
+    650
+  );
+
+}
+
+
+/* =====================================================
+   EFFECT ENGINE
+===================================================== */
+
+function effectsCheck() {
+
+  const speed =
+    Math.abs(
+      velocity
+    );
+
+  const now =
+    performance.now();
+
+  if (
+    particlesEnabled &&
+    speed > .08 &&
+    now - lastParticle > 70
+  ) {
+
+    createParticle();
+
+    lastParticle =
+      now;
+
+  }
+
+  if (
+    speed > .05
+  ) {
+
+    createTrail();
+
+  }
+
+  if (
+    speed > .4 &&
+    now - lastFlash > 900
+  ) {
+
+    triggerFlash();
+
+    lastFlash =
+      now;
+
+  }
+
+}
+
+
+/* =====================================================
+   FLASH
+===================================================== */
+
+function triggerFlash() {
+
+  flash.classList.remove(
+    "active"
+  );
+
+  void flash.offsetWidth;
+
+  flash.classList.add(
+    "active"
+  );
+
+}
+
+
+/* =====================================================
+   SHAKE
+===================================================== */
+
+function triggerShake() {
+
+  document.body.classList.remove(
+    "shake"
+  );
+
+  void document.body.offsetWidth;
+
+  document.body.classList.add(
+    "shake"
+  );
+
+  setTimeout(
+    () =>
+      document.body.classList.remove(
+        "shake"
+      ),
+    400
+  );
+
+}
+
+
+/* =====================================================
+   CHAOS
+===================================================== */
+
+function chaos() {
+
+  particleBurst(
+    60
+  );
+
+  triggerFlash();
+
+  triggerShake();
+
+  velocity =
+    (Math.random() > .5 ? 1 : -1) *
+    (.3 + Math.random() * .5);
+
+  angle +=
+    Math.random() *
+    6;
+
+  document
+    .getElementById(
+      "gradientToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "gridToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "auroraToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "rainbowToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "glowToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "particlesToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "trailsToggle"
+    )
+    .checked = true;
+
+  document
+    .getElementById(
+      "autoSpinToggle"
+    )
+    .checked = true;
+
+  applyEffects();
+
+}
+
+
+/* =====================================================
+   QUICK BUTTONS
+===================================================== */
+
+document
+  .getElementById("spin")
+  .onclick = () => {
+
+    velocity +=
+      .3;
+
+  };
+
+
+document
+  .getElementById("burst")
+  .onclick = () => {
+
+    particleBurst(
+      particleAmount
+    );
+
+  };
+
+
+document
+  .getElementById("flashButton")
+  .onclick =
+    triggerFlash;
+
+
+document
+  .getElementById("shakeButton")
+  .onclick =
+    triggerShake;
+
+
+document
+  .getElementById("chaosButton")
+  .onclick =
+    chaos;
+
+
+document
+  .getElementById("randomButton")
+  .onclick = () => {
+
+    angle =
+      Math.random() *
+      Math.PI *
+      2;
+
+    velocity =
+      (Math.random() > .5 ? 1 : -1) *
+      (0.1 + Math.random() * .5);
+
+    larry.style.fontSize =
+      50 +
+      Math.random() *
+      120 +
+      "px";
+
+    particleBurst(25);
+
+    triggerFlash();
+
+  };
+
+
+/* =====================================================
+   EFFECT SWITCHES
+===================================================== */
+
+function applyEffects() {
+
+  larry.classList.toggle(
+    "glow",
+    document.getElementById(
+      "glowToggle"
+    ).checked
+  );
+
+  larry.classList.toggle(
+    "pulse",
+    document.getElementById(
+      "pulseToggle"
+    ).checked
+  );
+
+  larry.classList.toggle(
+    "rainbow",
+    document.getElementById(
+      "rainbowToggle"
+    ).checked
+  );
+
+  particlesEnabled =
+    document.getElementById(
+      "particlesToggle"
+    ).checked;
+
+  trailsEnabled =
+    document.getElementById(
+      "trailsToggle"
+    ).checked;
+
+  autoSpin =
+    document.getElementById(
+      "autoSpinToggle"
+    ).checked;
+
+
+  document.getElementById(
+    "gradient"
+  ).style.opacity =
+    document.getElementById(
+      "gradientToggle"
+    ).checked
+      ? ".9"
+      : "0";
+
+
+  document.getElementById(
+    "grid"
+  ).style.opacity =
+    document.getElementById(
+      "gridToggle"
+    ).checked
+      ? ".7"
+      : "0";
+
+
+  document.getElementById(
+    "scanlines"
+  ).style.opacity =
+    document.getElementById(
+      "scanToggle"
+    ).checked
+      ? ".8"
+      : "0";
+
+
+  document.getElementById(
+    "vignette"
+  ).style.opacity =
+    document.getElementById(
+      "vignetteToggle"
+    ).checked
+      ? "1"
+      : "0";
+
+
+  document.getElementById(
+    "aurora"
+  ).style.opacity =
+    document.getElementById(
+      "auroraToggle"
+    ).checked
+      ? "1"
+      : "0";
+
+
+  document.body.classList.toggle(
+    "chromatic",
+    document.getElementById(
+      "chromaticToggle"
+    ).checked
+  );
+
+}
+
+
+/* =====================================================
+   SWITCH LISTENERS
+===================================================== */
+
+[
+  "glowToggle",
+  "pulseToggle",
+  "rainbowToggle",
+  "particlesToggle",
+  "trailsToggle",
+  "autoSpinToggle",
+  "gradientToggle",
+  "gridToggle",
+  "scanToggle",
+  "vignetteToggle",
+  "auroraToggle",
+  "chromaticToggle"
+].forEach(id => {
+
+  document
+    .getElementById(id)
+    .addEventListener(
+      "change",
+      applyEffects
+    );
+
+});
+
+
+/* =====================================================
+   DARK MODE
+===================================================== */
+
+document
+  .getElementById(
+    "darkToggle"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      document.body.classList.toggle(
+        "dark",
+        event.target.checked
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   HIGH CONTRAST
+===================================================== */
+
+document
+  .getElementById(
+    "contrastToggle"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      document.body.classList.toggle(
+        "highContrast",
+        event.target.checked
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   TEXT
+===================================================== */
+
+document
+  .getElementById(
+    "textInput"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      const value =
+        event.target.value
+          .slice(0,30);
+
+      larry.textContent =
+        value || "Larry";
+
+    }
+  );
+
+
+/* =====================================================
+   SIZE
+===================================================== */
+
+document
+  .getElementById(
+    "sizeSlider"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      const value =
+        Number(
+          event.target.value
+        );
+
+      larry.style.fontSize =
+        value + "px";
+
+      document
+        .getElementById(
+          "sizeValue"
+        )
+        .textContent =
+        value + "px";
+
+    }
+  );
+
+
+/* =====================================================
+   SPIN POWER
+===================================================== */
+
+document
+  .getElementById(
+    "spinSlider"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      spinPower =
+        Number(
+          event.target.value
+        ) / 100;
+
+      document
+        .getElementById(
+          "spinValue"
+        )
+        .textContent =
+        event.target.value +
+        "%";
+
+    }
+  );
+
+
+/* =====================================================
+   PARTICLE AMOUNT
+===================================================== */
+
+document
+  .getElementById(
+    "particleSlider"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      particleAmount =
+        Number(
+          event.target.value
+        );
+
+      document
+        .getElementById(
+          "particleValue"
+        )
+        .textContent =
+        particleAmount;
+
+    }
+  );
+
+
+/* =====================================================
+   LETTER SPACING
+===================================================== */
+
+document
+  .getElementById(
+    "spacingSlider"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      const value =
+        Number(
+          event.target.value
+        );
+
+      larry.style.letterSpacing =
+        value + "px";
+
+      document
+        .getElementById(
+          "spacingValue"
+        )
+        .textContent =
+        value + "px";
+
+    }
+  );
+
+
+/* =====================================================
+   COLORS
+===================================================== */
+
+document
+  .getElementById(
+    "backgroundColor"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      document.documentElement
+        .style.setProperty(
+          "--bg",
+          event.target.value
+        );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "textColor"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      document.documentElement
+        .style.setProperty(
+          "--text",
+          event.target.value
+        );
+
+    }
+  );
+
+
+/* =====================================================
+   BLUR
+===================================================== */
+
+document
+  .getElementById(
+    "blurToggle"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      panel.style.backdropFilter =
+        event.target.checked
+          ? "blur(24px)"
+          : "none";
+
+      panel.style.webkitBackdropFilter =
+        event.target.checked
+          ? "blur(24px)"
+          : "none";
+
+    }
+  );
+
+
+/* =====================================================
+   PANEL OPACITY
+===================================================== */
+
+document
+  .getElementById(
+    "opacitySlider"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      const value =
+        Number(
+          event.target.value
+        );
+
+      document.documentElement
+        .style.setProperty(
+          "--panel-bg",
+          `rgba(255,255,255,${value / 100})`
+        );
+
+      document
+        .getElementById(
+          "opacityValue"
+        )
+        .textContent =
+        value + "%";
+
+    }
+  );
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+document
+  .getElementById(
+    "resetSettings"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      location.reload();
+
+    }
+  );
+
+
+/* =====================================================
+   LIVE NOTIFICATION SEND
+===================================================== */
+
+document
+  .getElementById(
+    "send"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const input =
+        document.getElementById(
+          "notification"
+        );
+
+      const message =
+        input.value.trim();
+
+      if (!message)
+        return;
+
+      const result =
+        await channel.send({
+
+          type: "broadcast",
+
+          event: "notification",
+
+          payload: {
+            message
+          }
+
+        });
+
+      if (
+        result === "ok"
+      ) {
+
+        input.value = "";
+
+        showLiveMessage(
+          "Notification sent."
+        );
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   STARTUP
+===================================================== */
+
+applyEffects();
+
+render();
 
 </script>
 

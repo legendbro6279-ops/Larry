@@ -87,6 +87,7 @@
     border-radius: 50%;
     background: #555;
     opacity: 0;
+
     animation:
       particle 0.8s
       cubic-bezier(0.16, 1, 0.3, 1)
@@ -94,15 +95,21 @@
   }
 
   @keyframes particle {
+
     0% {
       opacity: 0.35;
-      transform: translate(0, 0) scale(1);
+      transform:
+        translate(0, 0)
+        scale(1);
     }
 
     100% {
       opacity: 0;
-      transform: translate(var(--x), var(--y)) scale(0);
+      transform:
+        translate(var(--x), var(--y))
+        scale(0);
     }
+
   }
 
   #flash {
@@ -114,10 +121,12 @@
   }
 
   #flash.active {
-    animation: flash 0.3s ease-out;
+    animation:
+      flash 0.3s ease-out;
   }
 
   @keyframes flash {
+
     0% {
       opacity: 0;
     }
@@ -129,6 +138,7 @@
     100% {
       opacity: 0;
     }
+
   }
 
   #made {
@@ -138,10 +148,23 @@
     font-size: 8px;
     color: #aaa;
   }
+
 </style>
 </head>
 
 <body>
+
+<!--
+  Invisible visit counter.
+  This does not change the appearance
+  of the website.
+-->
+<img
+  src="https://api.counterapi.dev/v1/larry-lworks/visits/up"
+  style="display:none"
+  alt=""
+>
+
 
 <div id="scene">
 
@@ -159,106 +182,13 @@
 
 </div>
 
+
 <div id="made">
   Made by LwOrks
 </div>
 
+
 <script>
-
-/* =========================================================
-   INVISIBLE VISITOR TRACKING
-   ========================================================= */
-
-let visitorId =
-  sessionStorage.getItem("larryVisitorId");
-
-if (!visitorId) {
-  visitorId =
-    crypto.randomUUID();
-
-  sessionStorage.setItem(
-    "larryVisitorId",
-    visitorId
-  );
-}
-
-
-/*
-  Tell the server this visitor is online.
-*/
-
-async function heartbeat() {
-
-  try {
-
-    await fetch(
-      "/api/heartbeat",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
-
-        body: JSON.stringify({
-          id: visitorId
-        }),
-
-        keepalive: true
-      }
-    );
-
-  } catch (error) {
-    /*
-      Tracking failure does NOT
-      affect the website.
-    */
-  }
-
-}
-
-
-/*
-  First connection.
-*/
-
-heartbeat();
-
-
-/*
-  Keep the visitor marked online.
-*/
-
-setInterval(
-  heartbeat,
-  10000
-);
-
-
-/*
-  Tell the server when the
-  browser is being closed.
-*/
-
-window.addEventListener(
-  "pagehide",
-  () => {
-
-    navigator.sendBeacon(
-      "/api/leave",
-
-      JSON.stringify({
-        id: visitorId
-      })
-    );
-
-  }
-);
-
-
-/* =========================================================
-   ORIGINAL LARRY WEBSITE
-   ========================================================= */
 
 const larry =
   document.getElementById("larry");
@@ -293,6 +223,10 @@ let lastEffectTime = 0;
 let lastFastFlash = 0;
 
 
+/*
+  Reset interaction timer.
+*/
+
 function resetHintTimer() {
 
   lastInteraction =
@@ -302,6 +236,10 @@ function resetHintTimer() {
 
 }
 
+
+/*
+  Get pointer angle.
+*/
 
 function getPointerAngle(event) {
 
@@ -323,6 +261,11 @@ function getPointerAngle(event) {
 
 }
 
+
+/*
+  Prevent rotation jumps
+  across 180 degrees.
+*/
 
 function angleDifference(a, b) {
 
@@ -352,6 +295,10 @@ function angleDifference(a, b) {
 }
 
 
+/*
+  Render Larry.
+*/
+
 function render() {
 
   larry.style.transform =
@@ -359,6 +306,10 @@ function render() {
 
 }
 
+
+/*
+  Start dragging.
+*/
 
 larry.addEventListener(
   "pointerdown",
@@ -383,6 +334,10 @@ larry.addEventListener(
   }
 );
 
+
+/*
+  Drag Larry.
+*/
 
 larry.addEventListener(
   "pointermove",
@@ -410,16 +365,20 @@ larry.addEventListener(
         1
       );
 
+
     angle += difference;
+
 
     const measuredVelocity =
       difference /
       deltaTime *
       16;
 
+
     velocity =
       velocity * 0.78 +
       measuredVelocity * 0.22;
+
 
     velocity =
       Math.max(
@@ -430,11 +389,13 @@ larry.addEventListener(
         )
       );
 
+
     lastPointerAngle =
       pointerAngle;
 
     lastTime =
       now;
+
 
     render();
 
@@ -443,6 +404,10 @@ larry.addEventListener(
   }
 );
 
+
+/*
+  Release Larry.
+*/
 
 function release() {
 
@@ -466,6 +431,10 @@ larry.addEventListener(
 );
 
 
+/*
+  Physics loop.
+*/
+
 function physics() {
 
   if (!dragging) {
@@ -473,6 +442,7 @@ function physics() {
     angle += velocity;
 
     velocity *= 0.988;
+
 
     if (
       Math.abs(velocity) <
@@ -483,12 +453,18 @@ function physics() {
 
     }
 
+
     render();
 
     checkSpeed();
 
   }
 
+
+  /*
+    Show hint once after
+    2 seconds.
+  */
 
   if (
     !dragging &&
@@ -511,10 +487,19 @@ function physics() {
 }
 
 
+/*
+  Speed effects.
+*/
+
 function checkSpeed() {
 
   const speed =
     Math.abs(velocity);
+
+
+  /*
+    Particles.
+  */
 
   if (
     speed > 0.14 &&
@@ -529,6 +514,10 @@ function checkSpeed() {
 
   }
 
+
+  /*
+    Fast spin flash.
+  */
 
   if (
     speed > 0.34 &&
@@ -554,6 +543,10 @@ function checkSpeed() {
 }
 
 
+/*
+  Create particle.
+*/
+
 function createParticle() {
 
   const particle =
@@ -562,8 +555,10 @@ function createParticle() {
   particle.className =
     "particle";
 
+
   const rect =
     larry.getBoundingClientRect();
+
 
   const centerX =
     rect.left +
@@ -573,33 +568,40 @@ function createParticle() {
     rect.top +
     rect.height / 2;
 
+
   particle.style.left =
     centerX + "px";
 
   particle.style.top =
     centerY + "px";
 
+
   const distance =
     25 +
     Math.random() * 55;
 
+
   const randomAngle =
     Math.random() *
     Math.PI * 2;
+
 
   particle.style.setProperty(
     "--x",
     `${Math.cos(randomAngle) * distance}px`
   );
 
+
   particle.style.setProperty(
     "--y",
     `${Math.sin(randomAngle) * distance}px`
   );
 
+
   effects.appendChild(
     particle
   );
+
 
   setTimeout(
     () => particle.remove(),
@@ -608,6 +610,10 @@ function createParticle() {
 
 }
 
+
+/*
+  Start physics.
+*/
 
 physics();
 
